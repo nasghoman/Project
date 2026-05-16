@@ -478,7 +478,7 @@
   const API_CHAT      = "/api/nasgh-chat";
 
   /* ─── Gemini (hardcoded — not exposed in UI) ─────────────── */
-  const _G = "AIzaSyCB7Yckzyq4BCggelmOaS1Q_g7yOz1jdnU";
+  const _G = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
   const GEMINI_MODEL = "gemini-2.0-flash";
   const GEMINI_URL   = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${_G}`;
 
