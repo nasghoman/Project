@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Digital Wheat Twin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --green:      #2e7d32;
+      --green-mid:  #43a047;
+      --green-pale: #e8f5e9;
+      --yellow:     #f1c232;
+      --bg:         #f0f7f1;
+      --white:      #ffffff;
+      --text:       #1b3a24;
+      --muted:      #607d68;
+      --border:     #d6eadb;
+      --red:        #c62828;
+      --orange:     #ef6c00;
+      --shadow:     0 6px 24px rgba(0,0,0,.08);
+      --r:          20px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 16px 14px 100px;
+    }
+
+    .page { max-width: 1080px; margin: 0 auto; }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--white); border-radius: var(--r);
+      box-shadow: var(--shadow); padding: 22px 24px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      gap: 8px; margin-bottom: 16px; border: 1px solid var(--border);
+    }
+
+    .brand { display: flex; align-items: center; gap: 14px; }
+
+    .brand-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--green), var(--yellow));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; flex-shrink: 0;
+    }
+
+    .brand-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 24px; color: var(--green); line-height: 1.15;
+    }
+
+    .brand-sub { font-size: 12px; color: var(--muted); }
+
+    /* ── CONNECTION BAR ── */
+    .connection-bar {
+      background: var(--white); border-radius: var(--r);
+      box-shadow: var(--shadow); padding: 16px 24px;
+      margin-bottom: 16px; border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+    }
+
+    #status {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 9px 18px; border-radius: 999px;
+      background: var(--green-pale); color: var(--green);
+      font-weight: 600; font-size: 14px;
+      border: 1px solid #c8e6c9; transition: .2s;
+    }
+
+    #status::before {
+      content: ''; width: 9px; height: 9px; border-radius: 50%;
+      background: var(--green-mid); display: inline-block; transition: background .2s;
+    }
+
+    #status.error { background: #ffebee; color: var(--red); border-color: #ffcdd2; }
+    #status.error::before { background: var(--red); }
+
+    /* ── BUTTONS ── */
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+    .btn {
+      padding: 10px 22px; border: none; border-radius: 999px;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: filter .15s, transform .08s;
+      font-family: inherit; letter-spacing: .01em;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--green), var(--yellow));
+      color: #fff; box-shadow: 0 4px 14px rgba(46,125,50,.28);
+    }
+
+    .btn-secondary { background: #546e7a; color: #fff; }
+
+    .btn:hover:not(:disabled) { filter: brightness(1.08); }
+    .btn:active:not(:disabled) { transform: scale(.97); }
+    .btn:disabled { opacity: .42; cursor: not-allowed; filter: none; }
+
+    /* ── PANELS ── */
+    .panel {
+      background: var(--white); border-radius: var(--r);
+      box-shadow: var(--shadow); padding: 22px; border: 1px solid var(--border);
+    }
+
+    .panel-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 19px; color: var(--green);
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* ── MAIN GRID ── */
+    .main-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 16px; margin-bottom: 16px;
+    }
+
+    /* ── SENSOR CARDS ── */
+    .sensor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .sensor-card {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 16px; padding: 16px 10px;
+      text-align: center; transition: box-shadow .15s;
+    }
+
+    .sensor-card:hover { box-shadow: 0 4px 16px rgba(46,125,50,.12); }
+
+    .sensor-icon  { font-size: 24px; margin-bottom: 5px; }
+    .sensor-label {
+      font-size: 11px; color: var(--muted); font-weight: 600;
+      margin-bottom: 5px; text-transform: uppercase; letter-spacing: .04em;
+    }
+    .sensor-value { font-size: 20px; font-weight: 700; color: var(--green); }
+
+    /* ── DIGITAL TWIN RESULT ── */
+    .result-box {
+      text-align: center; padding: 20px 14px;
+      border-radius: 16px; margin-bottom: 14px;
+      background: var(--bg); border: 1px solid var(--border);
+    }
+
+    .result-label { font-size: 13px; color: var(--muted); margin-bottom: 8px; font-weight: 500; }
+
+    #finalResult {
+      font-family: 'DM Serif Display', serif;
+      font-size: 40px; font-weight: 700; margin-bottom: 4px; transition: color .3s;
+    }
+
+    #finalResult.high     { color: var(--green); }
+    #finalResult.moderate { color: var(--orange); }
+    #finalResult.low      { color: var(--red); }
+
+    #scoreResult { font-size: 15px; color: var(--muted); }
+
+    /* ── ANALYSIS ── */
+    .analysis-wrap { margin-top: 4px; }
+    .analysis-wrap strong { font-size: 13px; color: var(--text); }
+
+    #analysisList { padding-left: 18px; margin-top: 8px; }
+    #analysisList li { font-size: 13px; line-height: 1.85; color: #2e4a38; }
+
+    .analysis-loading {
+      margin-top: 10px; padding: 10px 0;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; color: var(--muted);
+    }
+
+    .spinner {
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 2px solid var(--border);
+      border-top-color: var(--green);
+      animation: spin .7s linear infinite; flex-shrink: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .recommendation {
+      background: var(--green-pale); padding: 14px 16px;
+      border-radius: 14px; margin-top: 14px;
+      font-size: 13px; line-height: 1.7; color: #1b5e20; font-weight: 500;
+      border: 1px solid #c8e6c9;
+    }
+
+    /* ── STATUS SUMMARY CARDS ── */
+    .status-cards {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 14px; margin-bottom: 16px;
+    }
+
+    .status-card {
+      background: var(--white); border-radius: 16px;
+      padding: 18px 14px; text-align: center;
+      box-shadow: var(--shadow); border: 1px solid var(--border);
+    }
+
+    .sc-icon  { font-size: 28px; margin-bottom: 6px; }
+    .sc-label {
+      font-size: 11px; color: var(--muted); font-weight: 600;
+      text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px;
+    }
+    .sc-value { font-size: 17px; font-weight: 700; color: var(--green); }
+
+    /* ── CHAT FAB ── */
+    .chat-fab {
+      position: fixed; right: 20px; bottom: 22px;
+      background: linear-gradient(135deg, var(--green), var(--yellow));
+      color: #fff; border-radius: 999px; padding: 12px 20px;
+      display: flex; align-items: center; gap: 8px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.22);
+      border: none; font-size: 14px; font-weight: 600;
+      cursor: pointer; z-index: 40; font-family: inherit;
+    }
+
+    .fab-icon {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: #fff; display: flex; align-items: center;
+      justify-content: center; color: var(--green); font-size: 15px;
+    }
+
+    /* ── CHAT PANEL ── */
+    .chat-panel {
+      position: fixed; right: 14px; bottom: 80px;
+      width: min(420px, calc(100vw - 28px));
+      background: var(--white); border-radius: 20px;
+      box-shadow: 0 16px 48px rgba(0,0,0,.28);
+      border: 1px solid var(--border);
+      display: none; flex-direction: column;
+      max-height: 68vh; z-index: 50;
+    }
+
+    .chat-header {
+      padding: 12px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--green-pale); border-radius: 20px 20px 0 0;
+    }
+
+    .chat-header-name { font-size: 14px; font-weight: 700; color: var(--green); }
+    .chat-header-hint { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .chat-close {
+      border: none; background: transparent;
+      font-size: 22px; cursor: pointer; color: var(--muted); line-height: 1;
+    }
+
+    .chat-messages { padding: 12px 14px; overflow-y: auto; flex: 1; }
+
+    .chat-bubble {
+      max-width: 88%; padding: 9px 12px; border-radius: 14px;
+      margin-bottom: 8px; font-size: 13px; line-height: 1.65; white-space: pre-wrap;
+    }
+
+    .from-user { margin-left: auto; background: var(--green-pale); border-radius: 14px 0 14px 14px; }
+    .from-bot  { margin-right: auto; background: #f1f8e9; border-radius: 0 14px 14px 14px; }
+
+    .chat-input-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 12px 12px;
+      border-top: 1px solid var(--border);
+      background: var(--white); border-radius: 0 0 20px 20px;
+    }
+
+    .chat-input-row textarea {
+      flex: 1; resize: none; border-radius: 12px;
+      border: 1px solid var(--border); padding: 8px 10px; font-size: 13px;
+      min-height: 36px; max-height: 80px; font-family: inherit; outline: none;
+      background: var(--bg); transition: border-color .15s;
+    }
+
+    .chat-input-row textarea:focus { border-color: var(--green); background: var(--white); }
+
+    .chat-send-btn {
+      border-radius: 999px; border: none; background: var(--green); color: #fff;
+      padding: 9px 16px; font-size: 13px; cursor: pointer; font-weight: 600;
+      font-family: inherit; transition: background .15s;
+    }
+
+    .chat-send-btn:hover { background: var(--green-mid); }
+    .chat-send-btn:disabled { opacity: .5; cursor: default; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 820px) {
+      .main-grid    { grid-template-columns: 1fr; }
+      .status-cards { grid-template-columns: 1fr 1fr; }
+      .sensor-grid  { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 480px) {
+      .status-cards { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="page">
+
+  <!-- ══ HEADER (centered, no nav) ═══════════════════════════ -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-icon">🌾</div>
+      <div>
+        <div class="brand-name">Digital Wheat Twin</div>
+      </div>
+    </div>
+    <div class="brand-sub">Drought Resistance Prediction Based on Sensor Data</div>
+  </header>
+
+  <!-- ══ CONNECTION BAR ═══════════════════════════════════════ -->
+  <div class="connection-bar">
+    <div id="status">Status: Not Connected</div>
+    <div class="btn-row">
+      <button id="connectBtn" class="btn btn-primary">🔗 Connect to Sensor</button>
+      <button id="disconnectBtn" class="btn btn-secondary" disabled>Disconnect</button>
+    </div>
+  </div>
+
+  <!-- ══ MAIN GRID ════════════════════════════════════════════ -->
+  <div class="main-grid">
+
+    <!-- Live Sensor Data -->
+    <div class="panel">
+      <div class="panel-title">📡 Live Sensor Data</div>
+      <div class="sensor-grid">
+
+        <div class="sensor-card">
+          <div class="sensor-icon">🌡️</div>
+          <div class="sensor-label">Temperature</div>
+          <div class="sensor-value" id="temperatureValue">--</div>
+        </div>
+
+        <div class="sensor-card">
+          <div class="sensor-icon">💧</div>
+          <div class="sensor-label">Soil Moisture</div>
+          <div class="sensor-value" id="soilMoistureValue">--</div>
+        </div>
+
+        <div class="sensor-card">
+          <div class="sensor-icon">🧪</div>
+          <div class="sensor-label">Soil pH</div>
+          <div class="sensor-value" id="soilPHValue">--</div>
+        </div>
+
+        <div class="sensor-card">
+          <div class="sensor-icon">🧂</div>
+          <div class="sensor-label">Salinity / EC</div>
+          <div class="sensor-value" id="salinityValue">--</div>
+        </div>
+
+        <div class="sensor-card">
+          <div class="sensor-icon">🌿</div>
+          <div class="sensor-label">Nitrogen (N)</div>
+          <div class="sensor-value" id="nCardValue">--</div>
+        </div>
+
+        <div class="sensor-card">
+          <div class="sensor-icon">🔬</div>
+          <div class="sensor-label">Phosphorus (P)</div>
+          <div class="sensor-value" id="pCardValue">--</div>
+        </div>
+
+        <div class="sensor-card">
+          <div class="sensor-icon">⚡</div>
+          <div class="sensor-label">Potassium (K)</div>
+          <div class="sensor-value" id="kCardValue">--</div>
+        </div>
+
+        <div class="sensor-card">
+          <div class="sensor-icon">⏱️</div>
+          <div class="sensor-label">Last Update</div>
+          <div class="sensor-value" id="timeValue" style="font-size:14px;">--</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Digital Twin Result -->
+    <div class="panel">
+      <div class="panel-title">🧬 Digital Twin Result</div>
+
+      <div class="result-box">
+        <div class="result-label">Drought Resistance Prediction</div>
+        <div id="finalResult">Waiting</div>
+        <div id="scoreResult">Score: -- / 100</div>
+      </div>
+
+      <div class="analysis-wrap">
+        <strong>Simulation Analysis:</strong>
+        <div id="analysisLoading" class="analysis-loading" style="display:none;">
+          <div class="spinner"></div>
+          <span>Analyzing sensor data…</span>
+        </div>
+        <ul id="analysisList">
+          <li>Connect the sensor to receive live data.</li>
+          <li>The system will analyze the readings automatically.</li>
+          <li>The final result will predict drought resistance level.</li>
+        </ul>
+      </div>
+
+      <div id="recommendation" class="recommendation">
+        Waiting for sensor data.
+      </div>
+    </div>
+
+  </div><!-- /main-grid -->
+
+  <!-- ══ STATUS SUMMARY CARDS ══════════════════════════════════ -->
+  <div class="status-cards">
+    <div class="status-card">
+      <div class="sc-icon">🌡️</div>
+      <div class="sc-label">Temperature Status</div>
+      <div class="sc-value" id="tempStatus">--</div>
+    </div>
+    <div class="status-card">
+      <div class="sc-icon">💧</div>
+      <div class="sc-label">Water Stress</div>
+      <div class="sc-value" id="waterStatus">--</div>
+    </div>
+    <div class="status-card">
+      <div class="sc-icon">🌱</div>
+      <div class="sc-label">Plant Condition</div>
+      <div class="sc-value" id="plantStatus">--</div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<!-- ══ CHAT FAB ══════════════════════════════════════════════════ -->
+<button class="chat-fab" id="chatFabBtn">
+  <span class="fab-icon">💬</span>
+  <span>AI Chat</span>
+</button>
+
+<!-- ══ CHAT PANEL ════════════════════════════════════════════════ -->
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-header">
+    <div>
+      <div class="chat-header-name">AI Assistant</div>
+      <div class="chat-header-hint">Ask anything about your soil or the results</div>
+    </div>
+    <button class="chat-close" id="chatClose" aria-label="Close chat">×</button>
+  </div>
+  <div class="chat-messages" id="chatMessages">
+    <div class="chat-bubble from-bot">
+      Hello! 🌱 I'm your AI assistant. If the analysis isn't clear, or you'd like to know more about your soil condition, just ask — I'll explain in simple terms.
+    </div>
+  </div>
+  <div class="chat-input-row">
+    <textarea id="chatInput" rows="1" placeholder="Ask about your soil or the results…"></textarea>
+    <button class="chat-send-btn" id="chatSend">Send</button>
+  </div>
+</div>
+
+<!-- ══ FIREBASE AUTH ════════════════════════════════════════════ -->
+
+
+<!-- ══ MAIN APPLICATION SCRIPT ══════════════════════════════════ -->
+<script>
+  "use strict";
+
+  /* ─── BLE UUIDs ─────────────────────────────────────────── */
+  const SERVICE_UUID        = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+  const CHARACTERISTIC_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
+
+  /* ─── Backend API endpoints ──────────────────────────────── */
+  const API_SOIL_DATA = "/api/soil-data";
+  const API_CHAT      = "/api/nasgh-chat";
+
+  /* ─── Gemini (hardcoded — not exposed in UI) ─────────────── */
+  
+
+  /* ─── State ──────────────────────────────────────────────── */
+  let bleDevice = null;
+  let bleChar   = null;
+  let lastData  = null;
+
+  /* ─── DOM refs ───────────────────────────────────────────── */
+  const statusEl      = document.getElementById("status");
+  const connectBtn    = document.getElementById("connectBtn");
+  const disconnectBtn = document.getElementById("disconnectBtn");
+
+  /* ══ HELPERS ════════════════════════════════════════════════ */
+
+  function setStatus(msg, isError = false) {
+    statusEl.textContent = "Status: " + msg;
+    statusEl.classList.toggle("error", isError);
+  }
+
+  function formatTime(d) {
+    return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  }
+
+  function setSensorEl(id, rawVal, decimals, unit) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const n = Number(rawVal);
+    el.textContent = (!isNaN(n) && rawVal !== undefined && rawVal !== null)
+      ? n.toFixed(decimals) + (unit ? " " + unit : "")
+      : "--";
+  }
+
+  /* ══ GEMINI CALL ════════════════════════════════════════════ */
+
+async function callGemini(data) {
+  const res = await fetch("/api/analyze", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Analysis request failed: " + res.status);
+  return await res.text();
+}
+
+  /* ══ GEMINI SIMULATION ANALYSIS ════════════════════════════ */
+
+  async function runGeminiSimulation(data) {
+    const analysisLoadingEl = document.getElementById("analysisLoading");
+    const analysisListEl    = document.getElementById("analysisList");
+    const finalResultEl     = document.getElementById("finalResult");
+    const scoreResultEl     = document.getElementById("scoreResult");
+    const recommendEl       = document.getElementById("recommendation");
+    const tempStatusEl      = document.getElementById("tempStatus");
+    const waterStatusEl     = document.getElementById("waterStatus");
+    const plantStatusEl     = document.getElementById("plantStatus");
+
+    analysisLoadingEl.style.display = "flex";
+    analysisListEl.innerHTML        = "";
+    finalResultEl.className         = "";
+    finalResultEl.textContent       = "Analyzing…";
+    scoreResultEl.textContent       = "Score: -- / 100";
+    recommendEl.textContent         = "";
+
+    const prompt = `
+You are an advanced agronomic AI model specialising in wheat physiology, soil science, and drought stress research.
+Your task is to perform a comprehensive, science-based evaluation of wheat drought resistance from real sensor data.
+
+Do NOT use simple threshold rules. Instead, reason holistically about how each parameter interacts with the others
+to affect the plant's ability to withstand drought — consider osmotic stress, stomatal conductance, nutrient uptake
+efficiency under water deficit, soil structural health, ion toxicity, and root zone conditions.
+
+Sensor readings from the field:
+- Soil Temperature:   ${data.t   ?? "N/A"} °C
+- Soil Moisture:      ${data.m   ?? "N/A"} %      (volumetric or relative — treat as soil water availability)
+- Soil pH:            ${data.ph  ?? "N/A"}
+- Electrical Conductivity (EC / Salinity): ${data.ec ?? "N/A"} µS/cm
+- Nitrogen (N):       ${data.n   ?? "N/A"} mg/kg
+- Phosphorus (P):     ${data.p   ?? "N/A"} mg/kg
+- Potassium (K):      ${data.k   ?? "N/A"} mg/kg
+- Humic Acid Index:   ${data.hum ?? "N/A"}        (higher = better organic matter & water retention)
+- Soil Health Score (SHS): ${data.shs ?? "N/A"}   (composite: 0–100, higher = healthier)
+
+Your reasoning must consider:
+1. TEMPERATURE: Heat stress thresholds for wheat (optimal 15–25°C, flag heat stress >30°C, cold stress <10°C).
+   High temp accelerates evapotranspiration and increases drought demand even if moisture is moderate.
+2. SOIL MOISTURE: The interplay with EC — high moisture + high EC can cause osmotic stress worse than drought alone.
+   Low moisture reduces nutrient mobility, limiting N/P/K uptake regardless of soil concentration.
+3. pH: Affects nutrient solubility. pH <6 locks up P and Mo; pH >7.5 locks up Fe, Zn, Mn.
+   Nutrient lockout under drought stress compounds crop vulnerability.
+4. EC / SALINITY: Above 1500 µS/cm starts reducing wheat germination; above 4000 causes severe ion toxicity.
+   High EC combined with low moisture is far more damaging than either alone.
+5. NPK BALANCE: K is critical for drought tolerance — regulates stomatal closure and osmoregulation.
+   Insufficient K directly lowers drought resistance score. N deficiency reduces leaf area and photosynthesis.
+   P supports root depth and density, which is the primary drought avoidance mechanism.
+6. HUMIC ACID INDEX: Higher values improve water-holding capacity and nutrient chelation.
+   Low humic acid in sandy soils means moisture drains fast — magnifying drought risk.
+7. SHS (Soil Health Score): A composite that reflects microbial activity, structure, and organic content.
+   Low SHS means poor resilience under stress; high SHS buffers drought impacts.
+8. INTERACTIONS: Reason about compound effects. E.g., high temperature + low moisture + low K = critically low
+   drought resistance even if pH and NPK look acceptable in isolation.
+
+Score methodology (DO NOT use simple weighted sums — reason as a plant physiologist would):
+- 80–100: Excellent conditions. Plant has strong osmotic adjustment, adequate K for stomatal regulation,
+  sufficient moisture and organic matter buffering. Minor stress only.
+- 60–79: Good but not optimal. One or two factors are limiting. Plant can tolerate short dry spells.
+- 40–59: Moderate stress. Multiple interacting deficiencies or imbalances reduce tolerance significantly.
+- 20–39: High stress. Severe limiting factors. Plant likely showing wilting or yield loss symptoms.
+- 0–19: Critical. Conditions incompatible with survival without immediate intervention.
+
+The "level" field must strictly follow:
+- score >= 70 → "High"
+- score 40–69 → "Moderate"
+- score < 40  → "Low"
+
+Return ONLY a valid JSON object. No markdown, no explanation outside the JSON, no code fences.
+{
+  "score": <integer 0-100, derived from your agronomic reasoning — NOT a simple weighted average>,
+  "level": "<High|Moderate|Low>",
+  "tempStatus": "<concise label with one emoji reflecting temperature stress level>",
+  "waterStatus": "<concise label with one emoji reflecting water stress considering moisture AND EC together>",
+  "plantStatus": "<concise label with one emoji reflecting overall plant physiological state>",
+  "analysis": [
+    "<finding about temperature and its evapotranspiration / heat stress impact>",
+    "<finding about soil moisture and osmotic potential — mention EC interaction if relevant>",
+    "<finding about pH and its effect on nutrient availability under current moisture>",
+    "<finding about EC/salinity and ion toxicity or osmotic stress>",
+    "<finding about NPK balance, K's role in stomatal control, and SHS / humic acid buffering>"
+  ],
+  "recommendation": "<2-3 sentences of specific, actionable advice for the farmer to improve drought resistance given the exact readings above>"
+}
+`.trim();
+
+    try {
+      const raw = await callGemini(data);     // ← new: passes the sensor data object
+      const clean  = raw.replace(/```json|```/gi, "").trim();
+      const result = JSON.parse(clean);
+
+      const score = Math.min(100, Math.max(0, Number(result.score) || 0));
+      const level = ["High", "Moderate", "Low"].includes(result.level) ? result.level : "Low";
+
+      finalResultEl.textContent = level;
+      finalResultEl.classList.add(level.toLowerCase());
+      scoreResultEl.textContent = "Score: " + score + " / 100";
+
+      tempStatusEl.textContent  = result.tempStatus  || "--";
+      waterStatusEl.textContent = result.waterStatus || "--";
+      plantStatusEl.textContent = result.plantStatus || "--";
+
+      analysisListEl.innerHTML = "";
+      (Array.isArray(result.analysis) ? result.analysis : []).forEach(pt => {
+        const li = document.createElement("li");
+        li.textContent = pt;
+        analysisListEl.appendChild(li);
+      });
+
+      recommendEl.textContent = result.recommendation || "";
+
+    } catch (err) {
+      console.error("Gemini simulation error:", err);
+      finalResultEl.textContent = "Error";
+      scoreResultEl.textContent = "Score: -- / 100";
+      recommendEl.textContent   = "Analysis failed: " + err.message;
+
+      const li = document.createElement("li");
+      li.textContent = "Could not get AI analysis. Please try again.";
+      analysisListEl.appendChild(li);
+    } finally {
+      analysisLoadingEl.style.display = "none";
+    }
+  }
+
+  /* ══ APPLY READING → UI ═════════════════════════════════════ */
+
+  function applyReading(data) {
+    if (!data) return;
+    lastData = data;
+
+    document.getElementById("timeValue").textContent = formatTime(new Date());
+
+    setSensorEl("temperatureValue",  data.t,   1, "°C");
+    setSensorEl("soilMoistureValue", data.m,   1, "%");
+    setSensorEl("soilPHValue",       data.ph,  2, "");
+    setSensorEl("salinityValue",     data.ec,  0, "µS/cm");
+    setSensorEl("nCardValue",        data.n,   0, "mg/kg");
+    setSensorEl("pCardValue",        data.p,   0, "mg/kg");
+    setSensorEl("kCardValue",        data.k,   0, "mg/kg");
+
+    runGeminiSimulation(data);
+    saveReadingToCloud(data);
+  }
+
+  /* ══ CLOUD SAVE ═════════════════════════════════════════════ */
+
+  async function saveReadingToCloud(data) {
+    try {
+      await fetch(API_SOIL_DATA, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source: "ble-stick", reading: data }),
+      });
+    } catch (e) {
+      console.warn("Cloud save failed:", e);
+    }
+  }
+
+  /* ══ BLE CONNECTION ═════════════════════════════════════════ */
+
+  async function connectSensor() {
+    if (!navigator.bluetooth) {
+      setStatus("Web Bluetooth is not supported in this browser.", true);
+      alert("Please use Google Chrome on Android/Desktop, or Bluefy on iOS.");
+      return;
+    }
+
+    try {
+      setStatus("Scanning for sensor…");
+      connectBtn.disabled = true;
+
+      bleDevice = await navigator.bluetooth.requestDevice({
+        filters: [{ services: [SERVICE_UUID] }],
+        optionalServices: [SERVICE_UUID],
+      });
+
+      bleDevice.addEventListener("gattserverdisconnected", onBleDisconnected);
+
+      setStatus("Connecting…");
+      const server  = await bleDevice.gatt.connect();
+      const service = await server.getPrimaryService(SERVICE_UUID);
+      bleChar = await service.getCharacteristic(CHARACTERISTIC_UUID);
+
+      await bleChar.startNotifications();
+      bleChar.addEventListener("characteristicvaluechanged", onBleNotification);
+
+      setStatus("Connected ✅");
+      disconnectBtn.disabled = false;
+
+    } catch (err) {
+      console.error(err);
+      setStatus("Connection failed: " + err.message, true);
+      connectBtn.disabled = false;
+    }
+  }
+
+  function onBleDisconnected() {
+    setStatus("Disconnected");
+    connectBtn.disabled    = false;
+    disconnectBtn.disabled = true;
+  }
+
+  async function disconnectSensor() {
+    if (!bleDevice) return;
+    try { await bleDevice.gatt.disconnect(); } catch (e) { console.error(e); }
+    onBleDisconnected();
+  }
+
+  function onBleNotification(event) {
+    const text = new TextDecoder("utf-8").decode(event.target.value);
+    console.log("BLE raw:", text);
+    try {
+      applyReading(JSON.parse(text));
+    } catch (e) {
+      console.error("JSON parse error:", e);
+      setStatus("Invalid data received from sensor.", true);
+    }
+  }
+
+  connectBtn.addEventListener("click", connectSensor);
+  disconnectBtn.addEventListener("click", disconnectSensor);
+
+  /* ══ CHAT BOT ═══════════════════════════════════════════════ */
+
+  const chatFabBtn   = document.getElementById("chatFabBtn");
+  const chatPanel    = document.getElementById("chatPanel");
+  const chatClose    = document.getElementById("chatClose");
+  const chatMessages = document.getElementById("chatMessages");
+  const chatInput    = document.getElementById("chatInput");
+  const chatSend     = document.getElementById("chatSend");
+
+  chatFabBtn.addEventListener("click", () => { chatPanel.style.display = "flex"; chatInput.focus(); });
+  chatClose.addEventListener("click",  () => { chatPanel.style.display = "none"; });
+
+  function addBubble(text, fromBot = false) {
+    const div = document.createElement("div");
+    div.className   = "chat-bubble " + (fromBot ? "from-bot" : "from-user");
+    div.textContent = text;
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  async function sendChatMessage() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    addBubble(text, false);
+    chatInput.value   = "";
+    chatSend.disabled = true;
+
+    const thinkingEl = document.createElement("div");
+    thinkingEl.className   = "chat-bubble from-bot";
+    thinkingEl.textContent = "Thinking…";
+    chatMessages.appendChild(thinkingEl);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    try {
+      /* Chat uses Gemini directly with soil context */
+      const context = lastData
+        ? `Current sensor readings: Temperature ${lastData.t}°C, Moisture ${lastData.m}%, pH ${lastData.ph}, EC ${lastData.ec} µS/cm, N ${lastData.n}, P ${lastData.p}, K ${lastData.k} mg/kg.`
+        : "No sensor reading available yet.";
+
+      const chatPrompt = `You are a helpful agronomist assistant for a Digital Wheat Twin system.\n${context}\n\nUser question: ${text}\n\nAnswer clearly and practically in 2-4 sentences.`;
+      const reply = await callGemini(chatPrompt);
+
+      thinkingEl.remove();
+      addBubble(reply, true);
+
+    } catch (err) {
+      console.error(err);
+      thinkingEl.remove();
+      addBubble("A connection error occurred. Please try again shortly.", true);
+    } finally {
+      chatSend.disabled = false;
+    }
+  }
+
+  chatSend.addEventListener("click", sendChatMessage);
+  chatInput.addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
+  });
+
+  chatInput.addEventListener("focus", () => { chatPanel.style.bottom = "320px"; });
+  chatInput.addEventListener("blur",  () => { chatPanel.style.bottom = "80px";  });
+
+  /* ══ CONSOLE DATA INJECTION API ═════════════════════════════
+   *
+   *  Test without the physical BLE sensor directly from DevTools.
+   *
+   *  injectReading({ t: 27, m: 35, ph: 7.1, ec: 1800, n: 40, p: 25, k: 160, hum: 0.9, shs: 65 })
+   *  getLastReading()
+   *
+   * ═════════════════════════════════════════════════════════════ */
+
+  window.injectReading = function(fields) {
+    if (typeof fields !== "object" || fields === null) {
+      console.error("[injectReading] Pass an object, e.g. injectReading({ t: 24, m: 55, ph: 6.8, ec: 1200 })");
+      return;
+    }
+    const merged = Object.assign({}, lastData || {}, fields);
+    console.log("[injectReading] Injecting:", merged);
+    setStatus("Status: Connected ✅");
+    applyReading(merged);
+  };
+
+  window.getLastReading = function() {
+    console.log("[getLastReading]", lastData);
+    return lastData;
+  };
+
+  console.log(
+    "%c🌾 Digital Wheat Twin — Console API\n" +
+    "%c  injectReading({ t, m, ph, ec, n, p, k, hum, shs })\n" +
+    "  getLastReading()\n\n" +
+    "  Example:\n" +
+    "  injectReading({ t: 27, m: 35, ph: 7.1, ec: 1800, n: 40, p: 25, k: 160, hum: 0.9, shs: 65 })",
+    "font-weight:bold; font-size:13px; color:#2e7d32;",
+    "color:#607d68; font-size:12px;"
+  );
+</script>
+</body>
+</html>
